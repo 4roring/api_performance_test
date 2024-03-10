@@ -3,7 +3,7 @@ from asyncio import current_task
 from typing import Annotated, AsyncIterator
 from fastapi import Depends
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm import sessionmaker, scoped_session, Session
 from sqlalchemy.exc import SQLAlchemyError
 
 from sqlalchemy.ext.asyncio import (
@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import (
 class Database:
     def __init__(self):
         self.engine = create_engine(
-            "mysql+aiomysql://root:root@localhost:3306/profile",
+            "mysql+pymysql://root:root@localhost:3306/profile",
             pool_pre_ping=True,
         )
         self.session_factory = sessionmaker(
@@ -48,6 +48,17 @@ class Database:
             finally:
                 await session.close()
 
+    def get_sync_session(self) -> Session:
+        sync_db = self.scoped_session()
+        try:
+            yield sync_db
+            sync_db.commit()
+        except SQLAlchemyError as e:
+            sync_db.rollback()
+        finally:
+            sync_db.close()
+
 
 db = Database()
 AsyncSessionDepends = Annotated[AsyncSession, Depends(db.get_session)]
+SessionDepends = Annotated[Session, Depends(db.get_sync_session)]

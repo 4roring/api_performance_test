@@ -11,6 +11,8 @@ sqlalchemy = {extras = ["asyncio"], version = "^2.0.27"}
 pymysql = "^1.1.0"
 aiomysql = "^0.2.0"
 fastapi = {extras = ["all"], version = "^0.110.0"}
+locust = "^2.24.0"
+cryptography = "^42.0.5"
 
 
 [build-system]

@@ -23,7 +23,7 @@ async def select_async(session: AsyncSessionDepends):
 async def insert_async(session: AsyncSessionDepends, value: str):
     test = Test(data=value)
     session.add(test)
-    await session.flush()
+    # await session.flush()
     return "success"
 
 

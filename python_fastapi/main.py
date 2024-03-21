@@ -4,6 +4,7 @@ import asyncio
 from sqlalchemy import select, insert, delete
 from table import Base, Test
 from db import AsyncSessionDepends, SessionDepends, db
+import pymysql
 
 app = FastAPI()
 
@@ -16,7 +17,7 @@ async def select_async(session: AsyncSessionDepends):
     stmt = select(Test)
     result = await session.execute(stmt)
     data = result.scalars()
-    return {"data": data.all()}
+    return {"data": data.all()[:1000]}
 
 
 @app.post("/async/insert/{value}")
@@ -35,24 +36,32 @@ async def delete_async(session: AsyncSessionDepends, value: str):
 
 
 @app.get("/sync/select")
-def select_sync(session: SessionDepends):
+def select_sync():
+    session = db.scoped_session()
     stmt = select(Test)
     result = session.execute(stmt)
     data = result.scalars()
+
     return {"data": data.all()}
 
 
 @app.post("/sync/insert/{value}")
-def insert_sync(session: SessionDepends, value: str):
-    test = Test(data=value)
-    session.add(test)
+def insert_sync(value: str):
+    session = db.scoped_session()
+    stmt = insert(Test).values(data=value)
+    # test = Test(data=value)
+    session.execute(stmt)
+    session.commit()
     return "success"
 
 
 @app.post("/sync/delete/{value}")
-def delete_sync(session: SessionDepends, value: str):
+def delete_sync(value: str):
+    session = db.scoped_session()
     stmt = delete(Test).where(Test.data == value)
     session.execute(stmt)
+    session.commit()
+
     return "success"
 
 

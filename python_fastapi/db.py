@@ -21,7 +21,7 @@ class Database:
             pool_pre_ping=True,
         )
         self.session_factory = sessionmaker(
-            bind=self.engine, autoflush=False, future=True
+            bind=self.engine, autoflush=False, autocommit=False
         )
         self.scoped_session = scoped_session(self.session_factory)
 
@@ -52,9 +52,6 @@ class Database:
         sync_db = self.scoped_session()
         try:
             yield sync_db
-            sync_db.commit()
-        except SQLAlchemyError as e:
-            sync_db.rollback()
         finally:
             sync_db.close()
 

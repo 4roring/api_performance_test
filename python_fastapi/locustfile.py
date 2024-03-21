@@ -2,21 +2,29 @@ from locust import HttpUser, task, between, TaskSet
 import random
 
 
+TYPE = "sync"
+
+
 class ProfileMain(HttpUser):
     wait_time = between(1, 2)
 
     @task(1)
     def profile_sync_select(self):
-        self.client.get("/sync/select")
+        self.client.get(f"/{TYPE}/select")
 
-    @task(3)
+    @task(1)
     def profile_sync_insert(self):
         insert_num = random.randrange(0, 9999999999)
-        self.client.post(f"/sync/insert/{insert_num}")
+        self.client.post(f"/{TYPE}/insert/{insert_num}")
 
-    @task(2)
+    @task(1)
     def profile_sync_delete(self):
-        response = self.client.get("/sync/select")
+        response = self.client.get(f"/{TYPE}/select")
+        if response.status_code != 200:
+            return
+
         data = response.json()
-        if select_data := data.get("data"):
-            self.client.post(f"/sync/delete/{select_data[0]}")
+        select_data_list = data.get("data")
+        if len(select_data_list) > 0:
+            value = select_data_list[0]["data"]
+            self.client.post(f"/{TYPE}/delete/{value}")
